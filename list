@@ -1,208 +1,40 @@
-// ============================================================================
-// Mastercam 2027
-// MACHINE GROUP / MACHINE NAME REPORT
-//
-// Finds all Machine Groups in the current Mastercam file and reports
-// the Machine Definition assigned to each group.
-//
-// Output:
-// C:\temp\2026-09-06\Mastercam_Machine_Groups.NC
-//
-// The resulting .NC file is opened using the Windows file association.
-// If .NC files are associated with Code Expert, it will open there.
-// ============================================================================
-
-using System;
-using System.IO;
-using System.Text;
-using System.Diagnostics;
-
-using Mastercam.IO;
-using Mastercam.Support;
-
-
-// ============================================================================
-// RUN
-// ============================================================================
-
-var app = new MachineGroupReport();
-app.Run();
-
-
-// ============================================================================
-// APPLICATION
-// ============================================================================
-
-public class MachineGroupReport
-{
-    private const string OutputFolder =
-        @"C:\temp\2026-09-06";
-
-    private const string OutputFile =
-        @"C:\temp\2026-09-06\Mastercam_Machine_Groups.NC";
-
-
-    public void Run()
-    {
-        try
-        {
-            Directory.CreateDirectory(
-                OutputFolder);
-
-
-            // ------------------------------------------------------------
-            // GET ALL GROUPS FROM TOOLPATH MANAGER
-            // ------------------------------------------------------------
-
-            var groups =
-                SearchManager.GetGroups();
-
-
-            if (groups == null ||
-                groups.Length == 0)
-            {
-                DialogManager.Error(
-                    "No groups were found in the current Mastercam file.",
-                    "Machine Group Report");
-
-                return;
-            }
-
-
-            StringBuilder output =
-                new StringBuilder();
-
-
-            output.AppendLine(
-                "(============================================================)");
-
-            output.AppendLine(
-                "( MASTERCAM MACHINE GROUP REPORT )");
-
-            output.AppendLine(
-                "(============================================================)");
-
-            output.AppendLine();
-
-            output.AppendLine(
-                "(SOURCE FILE)");
-
-            output.AppendLine(
-                "(" + FileManager.CurrentFileName + ")");
-
-            output.AppendLine();
-
-
-            int machineGroupCount = 0;
-
-
-            // ------------------------------------------------------------
-            // PROCESS GROUPS
-            // ------------------------------------------------------------
-
-            for (int i = 0;
-                 i < groups.Length;
-                 i++)
-            {
-                var group =
-                    groups[i];
-
-
-                if (group == null)
-                {
-                    continue;
-                }
-
-
-                // We only want actual Machine Groups.
-                if (!group.IsMachineGroup())
-                {
-                    continue;
-                }
-
-
-                machineGroupCount++;
-
-
-                string machineName =
-                    GroupManager.GetMachineNameInGroup(
-                        group);
-
-
-                if (string.IsNullOrEmpty(machineName))
-                {
-                    machineName =
-                        "<NO MACHINE FOUND>";
-                }
-
-
-                output.AppendLine(
-                    "(------------------------------------------------------------)");
-
-                output.AppendLine(
-                    "(MACHINE GROUP " +
-                    machineGroupCount +
-                    ")");
-
-                output.AppendLine(
-                    "(MACHINE: " +
-                    machineName +
-                    ")");
-
-                output.AppendLine();
-            }
-
-
-            // ------------------------------------------------------------
-            // SUMMARY
-            // ------------------------------------------------------------
-
-            output.AppendLine(
-                "(============================================================)");
-
-            output.AppendLine(
-                "(TOTAL MACHINE GROUPS: " +
-                machineGroupCount +
-                ")");
-
-            output.AppendLine(
-                "(============================================================)");
-
-
-            // ------------------------------------------------------------
-            // SAVE NC FILE
-            // ------------------------------------------------------------
-
-            File.WriteAllText(
-                OutputFile,
-                output.ToString(),
-                Encoding.ASCII);
-
-
-            // ------------------------------------------------------------
-            // OPEN NC FILE
-            // ------------------------------------------------------------
-
-            ProcessStartInfo startInfo =
-                new ProcessStartInfo();
-
-
-            startInfo.FileName =
-                OutputFile;
-
-
-            startInfo.UseShellExecute =
-                true;
-
-
-            Process.Start(
-                startInfo);
-        }
-        catch (Exception ex)
-        {
-            DialogManager.Error(
-                ex.ToString(),
-                "Machine Group Report");
-        }
-    }
-}
+%
+
+
+(T1 | 1/4 DRILL)
+
+G20
+G05.1 Q0
+N8 (OPERATION - 8)
+(ROTATION TEST)
+(1/4 DRILL)
+G00 G17 G40 G49 G80 G90 G94 G53 Z0
+T1 M06
+S1000 M03
+M08
+G00 G90 G54 B45. A90.
+X-.1626 Y0.
+G43 H1 Z9.7264
+G83 G98 Z.328 R3.2264 Q0. F5.
+G80
+G00 G91 G28 Z0.
+G49
+G00 G90 G55 B45. A210.
+X-.1626 Y0.
+G43 H1 Z9.7264
+G83 G98 Z.328 R3.2264 Q0. F5.
+G80
+G00 G91 G28 Z0.
+G49
+G00 G90 G56 B45. A330.
+X-.1626 Y0.
+G43 H1 Z9.7264
+G83 G98 Z.328 R3.2264 Q0. F5.
+G80
+M09
+M05
+G49
+G00 G28 G91 Z0.
+G53 A0. B0.
+M30
+%
