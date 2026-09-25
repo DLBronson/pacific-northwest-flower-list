@@ -1,0 +1,208 @@
+// ============================================================================
+// Mastercam 2027
+// MACHINE GROUP / MACHINE NAME REPORT
+//
+// Finds all Machine Groups in the current Mastercam file and reports
+// the Machine Definition assigned to each group.
+//
+// Output:
+// C:\temp\2026-09-06\Mastercam_Machine_Groups.NC
+//
+// The resulting .NC file is opened using the Windows file association.
+// If .NC files are associated with Code Expert, it will open there.
+// ============================================================================
+
+using System;
+using System.IO;
+using System.Text;
+using System.Diagnostics;
+
+using Mastercam.IO;
+using Mastercam.Support;
+
+
+// ============================================================================
+// RUN
+// ============================================================================
+
+var app = new MachineGroupReport();
+app.Run();
+
+
+// ============================================================================
+// APPLICATION
+// ============================================================================
+
+public class MachineGroupReport
+{
+    private const string OutputFolder =
+        @"C:\temp\2026-09-06";
+
+    private const string OutputFile =
+        @"C:\temp\2026-09-06\Mastercam_Machine_Groups.NC";
+
+
+    public void Run()
+    {
+        try
+        {
+            Directory.CreateDirectory(
+                OutputFolder);
+
+
+            // ------------------------------------------------------------
+            // GET ALL GROUPS FROM TOOLPATH MANAGER
+            // ------------------------------------------------------------
+
+            var groups =
+                SearchManager.GetGroups();
+
+
+            if (groups == null ||
+                groups.Length == 0)
+            {
+                DialogManager.Error(
+                    "No groups were found in the current Mastercam file.",
+                    "Machine Group Report");
+
+                return;
+            }
+
+
+            StringBuilder output =
+                new StringBuilder();
+
+
+            output.AppendLine(
+                "(============================================================)");
+
+            output.AppendLine(
+                "( MASTERCAM MACHINE GROUP REPORT )");
+
+            output.AppendLine(
+                "(============================================================)");
+
+            output.AppendLine();
+
+            output.AppendLine(
+                "(SOURCE FILE)");
+
+            output.AppendLine(
+                "(" + FileManager.CurrentFileName + ")");
+
+            output.AppendLine();
+
+
+            int machineGroupCount = 0;
+
+
+            // ------------------------------------------------------------
+            // PROCESS GROUPS
+            // ------------------------------------------------------------
+
+            for (int i = 0;
+                 i < groups.Length;
+                 i++)
+            {
+                var group =
+                    groups[i];
+
+
+                if (group == null)
+                {
+                    continue;
+                }
+
+
+                // We only want actual Machine Groups.
+                if (!group.IsMachineGroup())
+                {
+                    continue;
+                }
+
+
+                machineGroupCount++;
+
+
+                string machineName =
+                    GroupManager.GetMachineNameInGroup(
+                        group);
+
+
+                if (string.IsNullOrEmpty(machineName))
+                {
+                    machineName =
+                        "<NO MACHINE FOUND>";
+                }
+
+
+                output.AppendLine(
+                    "(------------------------------------------------------------)");
+
+                output.AppendLine(
+                    "(MACHINE GROUP " +
+                    machineGroupCount +
+                    ")");
+
+                output.AppendLine(
+                    "(MACHINE: " +
+                    machineName +
+                    ")");
+
+                output.AppendLine();
+            }
+
+
+            // ------------------------------------------------------------
+            // SUMMARY
+            // ------------------------------------------------------------
+
+            output.AppendLine(
+                "(============================================================)");
+
+            output.AppendLine(
+                "(TOTAL MACHINE GROUPS: " +
+                machineGroupCount +
+                ")");
+
+            output.AppendLine(
+                "(============================================================)");
+
+
+            // ------------------------------------------------------------
+            // SAVE NC FILE
+            // ------------------------------------------------------------
+
+            File.WriteAllText(
+                OutputFile,
+                output.ToString(),
+                Encoding.ASCII);
+
+
+            // ------------------------------------------------------------
+            // OPEN NC FILE
+            // ------------------------------------------------------------
+
+            ProcessStartInfo startInfo =
+                new ProcessStartInfo();
+
+
+            startInfo.FileName =
+                OutputFile;
+
+
+            startInfo.UseShellExecute =
+                true;
+
+
+            Process.Start(
+                startInfo);
+        }
+        catch (Exception ex)
+        {
+            DialogManager.Error(
+                ex.ToString(),
+                "Machine Group Report");
+        }
+    }
+}
